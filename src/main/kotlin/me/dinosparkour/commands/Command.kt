@@ -30,15 +30,10 @@ abstract class Command(val name: String,
                        val alias: Array<String> = arrayOf(name),
                        val allowPrivate: Boolean = true,
                        val authorExclusive: Boolean = false,
-                       val userRequiredPermissions: Array<Permission> = arrayOf(),
-                       var botRequiredPermissions: Array<Permission> = arrayOf())
+                       val requiredPermissions: Array<Permission> = arrayOf(),
+                       val userRequiresPermissions: Boolean = true,
+                       val botRequiresPermissions: Boolean = true)
     : EventListener {
-
-    init {
-        if (userRequiredPermissions.isNotEmpty() && botRequiredPermissions.isEmpty()) {
-            botRequiredPermissions = userRequiredPermissions
-        }
-    }
 
     abstract fun execute(args: List<String>, e: MessageReceivedEvent)
 
