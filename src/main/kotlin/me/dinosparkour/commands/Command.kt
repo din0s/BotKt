@@ -41,15 +41,12 @@ abstract class Command(val name: String,
 
     fun String.toMessage(): Message = MessageBuilder().append(this).build()
 
-    fun MessageReceivedEvent.reply(msg: Message, success: Consumer<Message>? = null) {
-        ChatUtil(this).reply(msg, success)
-    }
+    fun MessageReceivedEvent.reply(msg: Message, success: Consumer<Message>? = null)
+            = ChatUtil(this).reply(msg, success)
 
-    fun MessageReceivedEvent.reply(embed: MessageEmbed, success: Consumer<Message>? = null) {
-        ChatUtil(this).reply(embed, success)
-    }
+    fun MessageReceivedEvent.reply(embed: MessageEmbed, success: Consumer<Message>? = null)
+            = ChatUtil(this).reply(embed, success)
 
-    fun MessageReceivedEvent.reply(text: String, success: Consumer<Message>? = null) {
-        ChatUtil(this).reply(text, success)
-    }
+    fun MessageReceivedEvent.reply(text: String, success: Consumer<Message>? = null)
+            = ChatUtil(this).reply(text, success)
 }
