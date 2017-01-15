@@ -30,14 +30,20 @@ class EventManager : ListenerAdapter() {
         ||-========================================================
         || Account Info: ${selfUser.name}#${selfUser.discriminator} (ID: ${selfUser.id})
         || Connected to ${e.jda.guilds.size} guilds, ${e.jda.textChannels.size} text channels
+        || Prefix: ${System.getProperty("prefix") ?: "@mention"}
         ||-========================================================
         """.trimMargin("|"))
     }
 
     override fun onMessageReceived(e: MessageReceivedEvent) {
-        val prefix = "~" // TODO: Per guild prefix
         val content = e.message.rawContent
-        if (!content.startsWith(prefix, true))
+
+        var prefix = DatabaseManager(e.guild).getPrefix()
+        if (prefix == null) {
+            prefix = "^<@!?\\d{17,19}> ".toRegex().find(content)?.value
+        }
+
+        if (prefix == null || !content.startsWith(prefix, true))
             return
 
         val allArgs = content.substring(prefix.length).split("\\s+".toRegex())

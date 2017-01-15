@@ -41,7 +41,7 @@ abstract class Command(val name: String,
 
     abstract fun execute(args: List<String>, e: MessageReceivedEvent)
 
-    fun register() = Registry.registerCommand(this)
+    private fun register() = Registry.registerCommand(this)
 
     fun String.toMessage(): Message = MessageBuilder().append(this).build()
 

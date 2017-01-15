@@ -17,6 +17,7 @@
 package me.dinosparkour
 
 import me.dinosparkour.commands.Registry
+import me.dinosparkour.managers.DatabaseManager
 import me.dinosparkour.managers.EventManager
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
@@ -24,17 +25,19 @@ import net.dv8tion.jda.core.entities.Game
 import javax.security.auth.login.LoginException
 import kotlin.system.exitProcess
 
-private val REQUIRED_ARGS = 1
+// TODO: alternative config system
+private val REQUIRED_ARGS = 5
 
 fun main(args: Array<String>) {
-    if (args.size != REQUIRED_ARGS) {
+    if (args.size < REQUIRED_ARGS) {
         println("""
         |Invalid argument amount!
         |Expected: [$REQUIRED_ARGS] | Received: [${args.size}]
         """.trimMargin())
-        exitProcess(ExitStatus.INCORRECT_LAUNCH_ARGS.code)
+        exitProcess(ExitStatus.INSUFFICIENT_LAUNCH_ARGS.code)
     }
 
+    DatabaseManager.initialize(args[1], args[2], args[3], args[4])
     Registry().loadCommands()
     connect(args[0])
 }
@@ -48,7 +51,7 @@ private fun connect(token: String) {
                 .setToken(token)
                 .buildBlocking()
     } catch (ex: LoginException) {
-        ex.printStackTrace()
+        System.err.println(ex.message)
         exitProcess(ExitStatus.INVALID_TOKEN.code)
     }
 }
@@ -63,5 +66,11 @@ enum class ExitStatus(val code: Int) {
     // Error
     INVALID_TOKEN(20),
     CONFIG_MISSING(21),
-    INCORRECT_LAUNCH_ARGS(22)
+    INSUFFICIENT_LAUNCH_ARGS(22),
+
+    // SQL
+    SQL_ACCESS_DENIED(30),
+    SQL_INVALID_PASSWORD(31),
+    SQL_UNKNOWN_HOST(32),
+    SQL_UNKNOWN_DATABASE(33)
 }
