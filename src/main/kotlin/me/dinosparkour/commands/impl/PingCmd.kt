@@ -21,7 +21,8 @@ import me.dinosparkour.utils.ChatUtil
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import java.util.function.Consumer
 
-class PingCmd : Command("ping", "Returns an estimated ping to Discord's servers") {
+class PingCmd : Command(name = "ping",
+        description = "Returns an estimated ping to Discord's servers") {
 
     override fun execute(args: List<String>, e: MessageReceivedEvent) {
         var time = System.currentTimeMillis()
