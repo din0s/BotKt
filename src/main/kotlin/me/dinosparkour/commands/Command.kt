@@ -35,6 +35,10 @@ abstract class Command(val name: String,
                        val botRequiresPermissions: Boolean = true)
     : EventListener {
 
+    init {
+        register()
+    }
+
     abstract fun execute(args: List<String>, e: MessageReceivedEvent)
 
     fun register() = Registry.registerCommand(this)
