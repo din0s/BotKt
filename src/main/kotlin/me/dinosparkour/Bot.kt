@@ -17,6 +17,7 @@
 package me.dinosparkour
 
 import me.dinosparkour.commands.Registry
+import me.dinosparkour.managers.EventManager
 import net.dv8tion.jda.core.AccountType
 import net.dv8tion.jda.core.JDABuilder
 import net.dv8tion.jda.core.entities.Game
@@ -38,7 +39,7 @@ fun main(args: Array<String>) {
     connect(args[0])
 }
 
-fun connect(token: String) {
+private fun connect(token: String) {
     try {
         JDABuilder(AccountType.BOT)
                 .addListener(EventManager())

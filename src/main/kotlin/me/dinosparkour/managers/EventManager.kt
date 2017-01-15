@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package me.dinosparkour
+package me.dinosparkour.managers
 
 import me.dinosparkour.commands.Registry
 import net.dv8tion.jda.core.entities.ChannelType
