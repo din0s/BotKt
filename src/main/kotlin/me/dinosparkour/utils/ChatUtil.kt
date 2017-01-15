@@ -17,6 +17,7 @@
 package me.dinosparkour.utils
 
 import net.dv8tion.jda.core.MessageBuilder
+import net.dv8tion.jda.core.entities.ChannelType
 import net.dv8tion.jda.core.entities.Message
 import net.dv8tion.jda.core.entities.MessageEmbed
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
@@ -25,7 +26,7 @@ import java.util.function.Consumer
 class ChatUtil(val e: MessageReceivedEvent) {
 
     fun reply(msg: Message, success: Consumer<Message>? = null) {
-        if (permissionCheck()) {
+        if (!e.isFromType(ChannelType.TEXT) || e.textChannel.canTalk()) {
             e.channel.sendMessage(stripEveryoneHere(msg)).queue(success)
         }
     }
@@ -39,13 +40,8 @@ class ChatUtil(val e: MessageReceivedEvent) {
     }
 
     companion object {
-        private fun permissionCheck(): Boolean {
-            // TODO: Check for permissions
-            return true
-        }
-
         fun edit(msg: Message, newContent: String) {
-            if (permissionCheck()) {
+            if (!msg.isFromType(ChannelType.TEXT) || msg.textChannel.canTalk()) {
                 msg.editMessage(newContent).queue()
             }
         }
