@@ -32,6 +32,6 @@ class Registry {
         fun registerCommand(cmd: Command): Boolean = commands.add(cmd)
 
         fun getCommandByName(name: String): Command?
-                = commands.find { it.alias.contains(name) }
+                = commands.find { name in it.alias }
     }
 }
