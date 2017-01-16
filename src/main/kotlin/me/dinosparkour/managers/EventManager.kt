@@ -17,6 +17,7 @@
 package me.dinosparkour.managers
 
 import me.dinosparkour.commands.Registry
+import me.dinosparkour.utils.ChatUtil
 import net.dv8tion.jda.core.entities.ChannelType
 import net.dv8tion.jda.core.events.ReadyEvent
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
@@ -30,29 +31,40 @@ class EventManager : ListenerAdapter() {
         ||-========================================================
         || Account Info: ${selfUser.name}#${selfUser.discriminator} (ID: ${selfUser.id})
         || Connected to ${e.jda.guilds.size} guilds, ${e.jda.textChannels.size} text channels
-        || Prefix: ${System.getProperty("prefix") ?: "@mention"}
+        || Prefix: ${ConfigManager.getDefaultPrefix()}
         ||-========================================================
         """.trimMargin("|"))
     }
 
     override fun onMessageReceived(e: MessageReceivedEvent) {
         val content = e.message.rawContent
+        val selfId = e.jda.selfUser.id
 
-        var prefix = DatabaseManager(e.guild).getPrefix()
-        if (prefix == null) {
-            prefix = "^<@!?\\d{17,19}> ".toRegex().find(content)?.value
+        val db = DatabaseManager(e.guild)
+        var prefix = db.getPrefix()
+        if (prefix == "%mention%") {
+            prefix = e.jda.selfUser.asMention
         }
 
-        if (prefix == null || !content.startsWith(prefix, true))
+        if (content.matches("^<@!?$selfId>$".toRegex())) {
+            ChatUtil(e).reply("My prefix for this guild is: **${db.getPrefixFormatted(e.jda)}**")
+            return
+        }
+
+        val isMentionPrefix = content.matches("^<@!?$selfId>\\s.*".toRegex())
+        if (!isMentionPrefix && !content.startsWith(prefix, true))
             return
 
-        val allArgs = content.substring(prefix.length).split("\\s+".toRegex())
+        prefix = if (isMentionPrefix) content.substring(0, content.indexOf('>') + 1) else prefix
+        val index = if (isMentionPrefix) prefix.length + 1 else prefix.length
+
+        val allArgs = content.substring(index).split("\\s+".toRegex())
         val command = Registry.getCommandByName(allArgs[0])
         val args = allArgs.drop(1)
 
-        if (command == null || (e.isFromType(ChannelType.PRIVATE) && !command.allowPrivate))
+        if (e.isFromType(ChannelType.PRIVATE) && command?.allowPrivate?.not() ?: return)
             return
 
-        command.execute(args, e)
+        command?.execute(args, e)
     }
 }

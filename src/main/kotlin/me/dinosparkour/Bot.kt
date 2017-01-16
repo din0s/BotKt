@@ -17,6 +17,7 @@
 package me.dinosparkour
 
 import me.dinosparkour.commands.Registry
+import me.dinosparkour.managers.ConfigManager
 import me.dinosparkour.managers.DatabaseManager
 import me.dinosparkour.managers.EventManager
 import net.dv8tion.jda.core.AccountType
@@ -25,21 +26,26 @@ import net.dv8tion.jda.core.entities.Game
 import javax.security.auth.login.LoginException
 import kotlin.system.exitProcess
 
-// TODO: alternative config system
-private val REQUIRED_ARGS = 5
-
 fun main(args: Array<String>) {
-    if (args.size < REQUIRED_ARGS) {
-        println("""
-        |Invalid argument amount!
-        |Expected: [$REQUIRED_ARGS] | Received: [${args.size}]
-        """.trimMargin())
-        exitProcess(ExitStatus.INSUFFICIENT_LAUNCH_ARGS.code)
-    }
+    var config: Map<Any, String>? = null
 
-    DatabaseManager.initialize(args[1], args[2], args[3], args[4])
+    if (args.size < ConfigManager.REQUIRED_ARGS) {
+        if (System.getProperty("config").toBoolean()) {
+            // Detected config property. Reading values from config.json
+            config = ConfigManager.read()
+        } else {
+            println("""
+            |Invalid argument amount!
+            |Expected: [${ConfigManager.REQUIRED_ARGS}] | Received: [${args.size}]
+            """.trimMargin())
+            exitProcess(ExitStatus.INSUFFICIENT_ARGS.code)
+        }
+    }
+    config = config ?: ConfigManager(args).get()
+
+    DatabaseManager.initialize(config.filter { it.key in DatabaseAuth.keys() })
     Registry().loadCommands()
-    connect(args[0])
+    connect(config["token"]!!)
 }
 
 private fun connect(token: String) {
@@ -61,12 +67,12 @@ enum class ExitStatus(val code: Int) {
     UPDATE(10),
     SHUTDOWN(11),
     RESTART(12),
-    CONFIG_GENERATION(13),
+    NEW_CONFIG(13),
 
     // Error
     INVALID_TOKEN(20),
     CONFIG_MISSING(21),
-    INSUFFICIENT_LAUNCH_ARGS(22),
+    INSUFFICIENT_ARGS(22),
 
     // SQL
     SQL_ACCESS_DENIED(30),

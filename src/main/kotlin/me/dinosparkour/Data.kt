@@ -16,8 +16,23 @@
 
 package me.dinosparkour
 
-enum class DataType(val key: String) {
-    PREFIX("prefix")
+enum class DatabaseAuth(val key: String, val defaultValue: String = "") {
+    HOST("dbHost", "localhost:3306"),
+    NAME("dbName", "myDatabase"),
+    USER("dbUser", "root"),
+    PASSWORD("dbPassword", "letmein123");
+
+    companion object {
+        fun keys() = DatabaseAuth.values().map { it.key }
+    }
+}
+
+enum class DatabaseColumn(val defaultValue: String) {
+    PREFIX("~");
+
+    override fun toString(): String {
+        return super.toString().toLowerCase()
+    }
 }
 
 data class GuildData(var prefix: Any?) {

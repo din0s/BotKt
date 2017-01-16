@@ -16,11 +16,11 @@
 
 package me.dinosparkour.commands.impl
 
-import me.dinosparkour.DataType
+import me.dinosparkour.DatabaseColumn
 import me.dinosparkour.SQLTables
 import me.dinosparkour.commands.Command
+import me.dinosparkour.managers.ConfigManager
 import me.dinosparkour.managers.DatabaseManager
-import me.dinosparkour.utils.ChatUtil
 import net.dv8tion.jda.core.Permission
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 
@@ -32,34 +32,35 @@ class PrefixCmd : Command(name = "prefix",
 
     override fun execute(args: List<String>, e: MessageReceivedEvent) {
         val dbManager = DatabaseManager(e.guild)
-        val selfMention = e.jda.selfUser.asMention
-        val prefix = dbManager.getPrefix() ?: selfMention
-
         if (args.isEmpty()) {
-            e.reply("Current prefix: **$prefix**")
+            e.reply("Current prefix: **${dbManager.getPrefixFormatted(e.jda)}**")
             return
         }
 
-        val newPrefix = args.joinToString(" ").replace("\\$$".toRegex(), "")
-        if (newPrefix.length > 32) {
+        var newPrefix = args.joinToString(" ")
+                .replace("\\$$".toRegex(), "")
+
+        if (newPrefix.matches("^<@!?${e.jda.selfUser.id}>$".toRegex())) {
+            newPrefix = "%mention%"
+        } else if (newPrefix.length > 32) {
             e.reply("That prefix is too long! Max length: `32`")
             return
         }
 
-        val defaultPrefix: String? = System.getProperty("prefix")
-        val noEntry = dbManager.getPrefix() == null
+        val noEntry = dbManager.getData() == null
+        val defaultPrefix = ConfigManager.getDefaultPrefix()
         val table = "${SQLTables.GUILDS}${if (noEntry) " (id, prefix)" else ""}"
 
         if (newPrefix in arrayOf("reset", defaultPrefix)) {
             if (!noEntry) {
-                dbManager.deleteData(table, DataType.PREFIX)
+                dbManager.deleteData(table, DatabaseColumn.PREFIX)
             }
-            e.reply("Reset the prefix to **${defaultPrefix ?: selfMention}**")
+            e.reply("Reset the prefix to **$defaultPrefix**")
         } else {
-            if (newPrefix != prefix) {
-                dbManager.saveData(table, DataType.PREFIX, newPrefix)
+            if (newPrefix != dbManager.getPrefix()) {
+                dbManager.saveData(table, DatabaseColumn.PREFIX, newPrefix)
             }
-            e.reply("Set the prefix to **${ChatUtil.stripFormatting(newPrefix)}**")
+            e.reply("Set the prefix to **${dbManager.getPrefixFormatted(e.jda)}**")
         }
     }
 }

@@ -16,9 +16,12 @@
 
 package me.dinosparkour.managers
 
-import me.dinosparkour.DataType
+import me.dinosparkour.DatabaseAuth
+import me.dinosparkour.DatabaseColumn
 import me.dinosparkour.ExitStatus
 import me.dinosparkour.GuildData
+import me.dinosparkour.utils.ChatUtil
+import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.entities.Guild
 import org.mariadb.jdbc.internal.util.dao.QueryException
 import java.sql.*
@@ -52,9 +55,9 @@ class DatabaseManager(guild: Guild) {
         return delete(table)
     }
 
-    fun deleteData(table: String, type: DataType) {
+    fun deleteData(table: String, type: DatabaseColumn) {
         when (type) {
-            DataType.PREFIX -> getData()?.prefix = null
+            DatabaseColumn.PREFIX -> getData()?.prefix = null
         }
 
         if (getData()?.isNull() ?: false) {
@@ -62,10 +65,10 @@ class DatabaseManager(guild: Guild) {
         }
     }
 
-    fun saveData(table: String, type: DataType, value: Any): Boolean {
+    fun saveData(table: String, type: DatabaseColumn, value: Any): Boolean {
         if (id in guildData) {
             when (type) {
-                DataType.PREFIX -> getData()?.prefix = value.toString()
+                DatabaseColumn.PREFIX -> getData()?.prefix = value.toString()
             }
         } else {
             guildData.put(id, GuildData(value))
@@ -74,23 +77,33 @@ class DatabaseManager(guild: Guild) {
         return if (' ' in table) {
             insert(table, id, value)
         } else {
-            update(table, type.key, value)
+            update(table, type, value)
         }
     }
 
     fun getData(): GuildData? = guildData[id]
 
-    fun getPrefix(): String? = getData()?.prefix?.toString() ?: System.getProperty("prefix")
+    fun getPrefix(): String = getData()?.prefix?.toString() ?: ConfigManager.getDefaultPrefix()
+
+    fun getPrefixFormatted(jda: JDA): String {
+        return when (getPrefix()) {
+            "%mention%" -> jda.selfUser.asMention
+            ConfigManager.getDefaultPrefix() -> getPrefix() + " (default)"
+            else -> ChatUtil.stripFormatting(getPrefix())
+        }
+    }
 
     companion object {
         private val URL = "jdbc:mariadb://%s/%s"
         private lateinit var database: Connection
         private val guildData = mutableMapOf<Long, GuildData>()
 
-        private fun connect(host: String, name: String, username: String, password: String) {
+        private fun connect(map: Map<Any, String>) {
             print("Connecting to the database... ")
             val milli = measureTimeMillis {
-                database = DriverManager.getConnection(URL.format(host, name), username, password)
+                val url = URL.format(map[DatabaseAuth.HOST.key], map[DatabaseAuth.NAME.key])
+                database = DriverManager.getConnection(url,
+                        map[DatabaseAuth.USER.key], map[DatabaseAuth.PASSWORD.key])
             }
             println("Done! (${milli}ms)")
         }
@@ -109,9 +122,9 @@ class DatabaseManager(guild: Guild) {
             println("Done! (${milli}ms)")
         }
 
-        fun initialize(host: String, name: String, username: String, password: String) {
+        fun initialize(map: Map<Any, String>) {
             try {
-                connect(host, name, username, password)
+                connect(map)
                 readGuildData()
             } catch (ex: QueryException) {
                 System.err.println(ex.message)

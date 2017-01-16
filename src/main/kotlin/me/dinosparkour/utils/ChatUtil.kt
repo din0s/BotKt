@@ -57,7 +57,7 @@ class ChatUtil(val e: MessageReceivedEvent) {
                 = build(stripEveryoneHere(msg.rawContent))
 
         fun stripFormatting(text: String): String
-                = text.replace(">", "\u180E>")
+                = text.replace("@", "\\@")
                 .replace("~~", "\\~\\~")
                 .replace("*", "\\*")
                 .replace("`", "\\`")
