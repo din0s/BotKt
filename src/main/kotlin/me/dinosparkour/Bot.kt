@@ -50,11 +50,10 @@ fun main(args: Array<String>) {
 
 private fun connect(token: String) {
     try {
-        JDABuilder(AccountType.BOT)
+        JDABuilder().createDefault(token)
                 .addListener(EventManager())
                 .setBulkDeleteSplittingEnabled(false)
                 .setGame(Game.of("Thrones")) // pun xd
-                .setToken(token)
                 .buildBlocking()
     } catch (ex: LoginException) {
         System.err.println(ex.message)
